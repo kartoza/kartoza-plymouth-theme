@@ -36,6 +36,7 @@
         vscode
         git
         gum
+        pre-commit
       ];
 
       shellHook = ''
