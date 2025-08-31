@@ -1,5 +1,5 @@
 {
-  description = "[PACKAGE NAME]";
+  description = "kartoza-plymouth-theme";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.05";
@@ -21,9 +21,8 @@
       };
     };
   in {
-
     packages.x86_64-linux = {
-      default = pkgs.callPackage ./packages/[PACKAGE NAME] {};
+      default = pkgs.callPackage ./packages/kartoza-plymouth-theme {};
     };
 
     ######################################################
@@ -36,10 +35,11 @@
       buildInputs = with pkgs; [
         vscode
         git
+        gum
       ];
 
       shellHook = ''
-        echo "[PACKAGE NAME]"
+        echo "kartoza-plymouth-theme"
         echo "_________________________________________________________"
         echo "Command : Description"
         echo "_________________________________________________________"

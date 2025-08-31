@@ -1,7 +1,7 @@
-# ❄️ NixOS [PACKAGE NAME] [![MIT License](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+# ❄️ NixOS kartoza-plymouth-theme [![MIT License](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
 
-> ## 👋 Welcome to [PACKAGE NAME]!
+> ## 👋 Welcome to kartoza-plymouth-theme!
 >
 > **This repository hosts ...:**  
 >
@@ -37,7 +37,7 @@
 
 ## 🚀 Project Overview
 
-NixOS [PACKAGE NAME] is a .... The project includes:
+NixOS kartoza-plymouth-theme is a .... The project includes:
 
 
 
@@ -46,15 +46,15 @@ NixOS [PACKAGE NAME] is a .... The project includes:
 ### 🪪 Badges
 | Badge | Description |
 |-------|-------------|
-| ![License](https://img.shields.io/github/license/timlinux/[PACKAGE NAME].svg) | Repository license |
-| ![](https://img.shields.io/github/issues/timlinux/[PACKAGE NAME].svg) | Open issues count |
-| ![](https://img.shields.io/github/issues-closed/timlinux/[PACKAGE NAME].svg) | Closed issues count |
-| ![](https://img.shields.io/github/issues-pr/timlinux/[PACKAGE NAME].svg) | Open pull requests count |
-| ![](https://img.shields.io/github/issues-pr-closed/timlinux/[PACKAGE NAME].svg) | Closed pull requests count |
+| ![License](https://img.shields.io/github/license/timlinux/kartoza-plymouth-theme.svg) | Repository license |
+| ![](https://img.shields.io/github/issues/timlinux/kartoza-plymouth-theme.svg) | Open issues count |
+| ![](https://img.shields.io/github/issues-closed/timlinux/kartoza-plymouth-theme.svg) | Closed issues count |
+| ![](https://img.shields.io/github/issues-pr/timlinux/kartoza-plymouth-theme.svg) | Open pull requests count |
+| ![](https://img.shields.io/github/issues-pr-closed/timlinux/kartoza-plymouth-theme.svg) | Closed pull requests count |
 
 ### ⭐️ Project Stars
 
-![Stars](https://starchart.cc/timlinux/[PACKAGE NAME].svg)
+![Stars](https://starchart.cc/timlinux/kartoza-plymouth-theme.svg)
 
 
 ## 📜 License
@@ -65,15 +65,15 @@ This project is licensed under the MIT License. See the [LICENSE](./LICENSE) fil
 ## 📂 Folder Structure
 
 ```plaintext
-[PACKAGE NAME]/
+kartoza-plymouth-theme/
   ├── ❄️  flake.nix         # Main Nix flake configuration
   ├── 🔒  flake.lock        # Lock file for reproducible builds
   ├── 📦  packages/         # Package definitions
   │   ├── ⚙️  default.nix   # Default package configuration
   │   └── 🛠️  utils/        # Utilities package
-  │       ├── ⚙️  default.nix # [PACKAGE NAME] package definition
-  │       ├── 📋  README.md   # [PACKAGE NAME] documentation
-  │       └── 🐚  [PACKAGE NAME].sh    # Main utilities script (1100+ lines)
+  │       ├── ⚙️  default.nix # kartoza-plymouth-theme package definition
+  │       ├── 📋  README.md   # kartoza-plymouth-theme documentation
+  │       └── 🐚  kartoza-plymouth-theme.sh    # Main utilities script (1100+ lines)
   ├── 📜  LICENSE           # MIT license file
   ├── 📖  README.md         # This file
   ├── 📝  vscode.log        # VSCode configuration log
@@ -88,8 +88,8 @@ This project is licensed under the MIT License. See the [LICENSE](./LICENSE) fil
 Clone the repository and run locally:
 
 ```bash
-git clone https://github.com/timlinux/[PACKAGE NAME].git
-cd [PACKAGE NAME]
+git clone https://github.com/timlinux/kartoza-plymouth-theme.git
+cd kartoza-plymouth-theme
 nix run
 ```
 
@@ -99,10 +99,10 @@ Run directly from GitHub without cloning:
 
 ```bash
 # Run the default utilities
-nix run github:timlinux/[PACKAGE NAME]
+nix run github:timlinux/kartoza-plymouth-theme
 
 # Or specifically run the utils package
-nix run github:timlinux/[PACKAGE NAME]#utils
+nix run github:timlinux/kartoza-plymouth-theme#utils
 ```
 
 ### 🔧 Development Environment
@@ -175,16 +175,16 @@ Have questions or feedback? Feel free to open an issue or submit a Pull Request!
 ## 🧑‍💻👩‍💻 Contributors
 
 - [Tim Sutton](https://github.com/timlinux) – Original author and maintainer
-- [Contributors](https://github.com/timlinux/[PACKAGE NAME]/graphs/contributors) – See the full list of amazing contributors who have helped make this project possible.
+- [Contributors](https://github.com/timlinux/kartoza-plymouth-theme/graphs/contributors) – See the full list of amazing contributors who have helped make this project possible.
 
 
 ## 📦 Adding to Your Own Flake
 
-You can easily include the [PACKAGE NAME] package in your own NixOS configuration or flake by adding it as an input.
+You can easily include the kartoza-plymouth-theme package in your own NixOS configuration or flake by adding it as an input.
 
 ### 🔧 Adding as Flake Input
 
-Add [PACKAGE NAME] to your `flake.nix` inputs section:
+Add kartoza-plymouth-theme to your `flake.nix` inputs section:
 
 ```nix
 {
@@ -192,12 +192,12 @@ Add [PACKAGE NAME] to your `flake.nix` inputs section:
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-    # Add [PACKAGE NAME] as an input
-    [PACKAGE NAME].url = "github:timlinux/[PACKAGE NAME]";
+    # Add kartoza-plymouth-theme as an input
+    kartoza-plymouth-theme.url = "github:timlinux/kartoza-plymouth-theme";
     # Other inputs...
   };
 
-  outputs = { self, nixpkgs, [PACKAGE NAME], ... }@inputs: {
+  outputs = { self, nixpkgs, kartoza-plymouth-theme, ... }@inputs: {
     # Your configuration here...
   };
 }
@@ -211,7 +211,7 @@ Include the utils package in your system packages:
 { config, pkgs, inputs, ... }: {
   environment.systemPackages = with pkgs; [
     # Your other packages...
-    inputs.[PACKAGE NAME].packages.${pkgs.system}.default
+    inputs.kartoza-plymouth-theme.packages.${pkgs.system}.default
   ];
 }
 ```
@@ -225,7 +225,7 @@ Include it in your development environment:
   devShells.default = pkgs.mkShell {
     buildInputs = with pkgs; [
       # Your development tools...
-      inputs.[PACKAGE NAME].packages.${pkgs.system}.default
+      inputs.kartoza-plymouth-theme.packages.${pkgs.system}.default
     ];
   };
 }
@@ -240,7 +240,7 @@ Once installed, you can run the the package from anywhere in your system:
 utils
 
 # Or run directly if using nix run
-nix run github:timlinux/[PACKAGE NAME]
+nix run github:timlinux/kartoza-plymouth-theme
 ```
 
 The utilities will be available system-wide and you can access all the system information tools, benchmarks, and management utilities through the beautiful terminal interface.

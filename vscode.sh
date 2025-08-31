@@ -4,7 +4,7 @@
 # User-adjustable parameters
 # ----------------------------------------------
 
-VSCODE_PROFILE="[PACKAGE NAME]"
+VSCODE_PROFILE="kartoza-plymouth-theme"
 EXT_DIR=".vscode-extensions"
 VSCODE_DIR=".vscode"
 LOG_FILE="vscode.log"
