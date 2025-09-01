@@ -137,4 +137,8 @@ if [ -d "$NEW_PACKAGE_DIR" ]; then
     echo "  - Package directory: $NEW_PACKAGE_DIR"
 fi
 echo
+
+echo "  ✓ Renaming package directory (not a git repository)"
+pre-commit install
+
 gum style --foreground 244 "Note: If you need to undo these changes, restore from the backup directory."
