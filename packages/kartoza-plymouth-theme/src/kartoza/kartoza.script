@@ -45,6 +45,16 @@ SECONDARY_FONT = "NotoSans Regular 14";
 LOGO.center.x = 0.5;
 LOGO.center.y = 0.5;
 
+// Animation scaling configuration
+// Maximum size of the animation as a percentage of screen height
+LOGO.max_height_percent = 1.0; // 100% of screen height (full screen)
+// Maximum size of the animation as a percentage of screen width  
+LOGO.max_width_percent = 1.0; // 100% of screen width (full screen)
+// Whether to maintain aspect ratio when scaling (1 = yes, 0 = no)
+LOGO.keep_aspect_ratio = 1;
+// Minimum size constraints (useful for very large screens)
+LOGO.min_size = 200; // Minimum width/height in pixels
+
 // Position of the boot message in percentage of the screen dimensions
 BOOT_MESSAGE.center.x = 0.5;
 BOOT_MESSAGE.center.y = 0.8;
@@ -109,6 +119,55 @@ while (1) {
     animation.images[animation.length++] = image;
 }
 
+// Calculate scaling factor based on the first image and screen dimensions
+if (animation.length > 0) {
+    local.first_image = animation.images[0];
+    local.original_width = first_image.GetWidth();
+    local.original_height = first_image.GetHeight();
+    
+    // Calculate maximum allowed dimensions
+    local.max_height = screen.height * LOGO.max_height_percent;
+    local.max_width = screen.width * LOGO.max_width_percent;
+    
+    // Calculate scale factor to fit within constraints
+    local.scale_height = max_height / original_height;
+    local.scale_width = max_width / original_width;
+    
+    if (LOGO.keep_aspect_ratio) {
+        // Use the smaller scale to maintain aspect ratio
+        animation.scale_factor = scale_height;
+        if (scale_width < scale_height) animation.scale_factor = scale_width;
+        
+        // Apply minimum size constraint
+        local.min_scale = LOGO.min_size / original_width;
+        if (LOGO.min_size / original_height > min_scale) {
+            min_scale = LOGO.min_size / original_height;
+        }
+        if (animation.scale_factor < min_scale) {
+            animation.scale_factor = min_scale;
+        }
+    } else {
+        // Use different scales for width and height (stretching)
+        animation.scale_factor_x = scale_width;
+        animation.scale_factor_y = scale_height;
+        
+        // Apply minimum size constraints
+        local.min_scale_x = LOGO.min_size / original_width;
+        local.min_scale_y = LOGO.min_size / original_height;
+        if (animation.scale_factor_x < min_scale_x) animation.scale_factor_x = min_scale_x;
+        if (animation.scale_factor_y < min_scale_y) animation.scale_factor_y = min_scale_y;
+    }
+    
+    // Calculate final dimensions
+    if (LOGO.keep_aspect_ratio) {
+        animation.scaled_width = original_width * animation.scale_factor;
+        animation.scaled_height = original_height * animation.scale_factor;
+    } else {
+        animation.scaled_width = original_width * animation.scale_factor_x;
+        animation.scaled_height = original_height * animation.scale_factor_y;
+    }
+}
+
 fun hide_animation() {
     animation.sprite.SetOpacity(0.3);
 }
@@ -118,15 +177,25 @@ fun show_animation() {
 }
 
 fun update_animation() {
-    // Load image and update the animation sprite
+    if (animation.length == 0) return;
+    
+    // Load image and apply scaling
     current_image = animation.images[animation.current_frame];
-    animation.sprite.SetImage(current_image);
+    
+    // Scale the image based on the calculated scaling factor
+    local.scaled_image;
+    if (LOGO.keep_aspect_ratio) {
+        scaled_image = current_image.Scale(animation.scaled_width, animation.scaled_height);
+    } else {
+        scaled_image = current_image.Scale(animation.scaled_width, animation.scaled_height);
+    }
+    
+    // Update the animation sprite with scaled image
+    animation.sprite.SetImage(scaled_image);
 
-    // When the images are all the same dimensions, it would be more
-    // efficient to set the sprite position once at initialization
-    // but in the case frames are not all the same size, we update it here
-    animation.sprite.SetX(LOGO.center.x * screen.width - current_image.GetWidth() / 2);
-    animation.sprite.SetY(LOGO.center.y * screen.height - current_image.GetHeight() / 2);
+    // Position the sprite at the center
+    animation.sprite.SetX(LOGO.center.x * screen.width - animation.scaled_width / 2);
+    animation.sprite.SetY(LOGO.center.y * screen.height - animation.scaled_height / 2);
 
     // Then update current frame and reset if necessary
     animation.current_frame++;
