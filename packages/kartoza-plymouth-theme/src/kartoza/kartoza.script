@@ -19,3 +19,52 @@ msg = Image.Text("Booting Kartoza…", 1.0, 1.0, 1.0);
 msg_sprite = Sprite(msg);
 msg_sprite.SetX ((scr_w - msg.GetWidth()) / 2);
 msg_sprite.SetY (logo_sprite.GetY() + logo_h + 20);
+
+# --- LABEL EXAMPLES (backs onto label-pango/freetype) ---
+title_img   = Image.Text("Kartoza", 1.0, 1.0, 1.0, 1.0, "Sans Bold 28", "center");
+title_sprite= Sprite(title_img);
+title_sprite.SetX((Window.GetWidth()  - title_img.GetWidth())/2);
+title_sprite.SetY(logo_sprite.GetY() - title_img.GetHeight() - 24);
+
+# Small status line
+status_img   = Image.Text("Booting Kartoza…", 0.85, 0.85, 0.85, 1.0, "Sans 16");
+status_sprite= Sprite(status_img);
+status_sprite.SetX((Window.GetWidth() - status_img.GetWidth())/2);
+status_sprite.SetY(logo_sprite.GetY() + logo_h + 40);
+
+# --- SPACE-FLARES (animated background) ---
+# Create flare field full-screen and send to the back.
+flares = SpaceFlares();
+flares_sprite = Sprite(flares);
+flares_sprite.SetZ(-1000);
+flares_sprite.SetX(0);
+flares_sprite.SetY(0);
+
+# Optionally tint your window so the flare glow blends nicely
+Window.SetBackgroundTopColor(0.0, 0.0, 0.0);
+Window.SetBackgroundBottomColor(0.0, 0.0, 0.0);
+
+
+# --- SCRIPTED PROGRESS BAR (no extra plugin) ---
+bar_w = Math.Int(Window.GetWidth() * 0.5);
+bar_h = 6;
+bar_x = Math.Int((Window.GetWidth()  - bar_w)/2);
+bar_y = status_sprite.GetY() + status_img.GetHeight() + 28;
+
+# Build bar from images so we can recolor by swapping sprites
+bar_bg_img = Image.Text(" ", 1,1,1,0, "Sans 1"); # transparent 1x1
+bar_bg_img = bar_bg_img.Scale(bar_w, bar_h);
+bar_bg     = Sprite(bar_bg_img);
+bar_bg.SetX(bar_x); bar_bg.SetY(bar_y); bar_bg.SetOpacity(0.25);
+
+bar_fg_img = Image.Text(" ", 1,1,1,1, "Sans 1").Scale(1, bar_h);
+bar_fg     = Sprite(bar_fg_img);
+bar_fg.SetX(bar_x); bar_fg.SetY(bar_y);
+
+fun on_progress(time, progress) {
+  # clamp + widen foreground
+  p = Math.Clamp(progress, 0, 1);
+  bar_fg.SetImage(bar_fg.GetImage().Scale(Math.Int(bar_w*p), bar_h));
+}
+Plymouth.SetBootProgressFunction(on_progress);
+
