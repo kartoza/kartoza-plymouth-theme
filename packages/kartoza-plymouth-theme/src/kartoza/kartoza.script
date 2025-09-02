@@ -51,7 +51,7 @@ LOGO.max_height_percent = 1.0; // 100% of screen height (full screen)
 // Maximum size of the animation as a percentage of screen width  
 LOGO.max_width_percent = 1.0; // 100% of screen width (full screen)
 // Whether to maintain aspect ratio when scaling (1 = yes, 0 = no)
-LOGO.keep_aspect_ratio = 1;
+LOGO.keep_aspect_ratio = 0; // Disabled - stretch to fill entire screen
 // Minimum size constraints (useful for very large screens)
 LOGO.min_size = 200; // Minimum width/height in pixels
 
@@ -125,47 +125,13 @@ if (animation.length > 0) {
     local.original_width = first_image.GetWidth();
     local.original_height = first_image.GetHeight();
     
-    // Calculate maximum allowed dimensions
-    local.max_height = screen.height * LOGO.max_height_percent;
-    local.max_width = screen.width * LOGO.max_width_percent;
+    // For full screen without aspect ratio, always use screen dimensions
+    animation.scaled_width = screen.width;
+    animation.scaled_height = screen.height;
     
-    // Calculate scale factor to fit within constraints
-    local.scale_height = max_height / original_height;
-    local.scale_width = max_width / original_width;
-    
-    if (LOGO.keep_aspect_ratio) {
-        // Use the smaller scale to maintain aspect ratio
-        animation.scale_factor = scale_height;
-        if (scale_width < scale_height) animation.scale_factor = scale_width;
-        
-        // Apply minimum size constraint
-        local.min_scale = LOGO.min_size / original_width;
-        if (LOGO.min_size / original_height > min_scale) {
-            min_scale = LOGO.min_size / original_height;
-        }
-        if (animation.scale_factor < min_scale) {
-            animation.scale_factor = min_scale;
-        }
-    } else {
-        // Use different scales for width and height (stretching)
-        animation.scale_factor_x = scale_width;
-        animation.scale_factor_y = scale_height;
-        
-        // Apply minimum size constraints
-        local.min_scale_x = LOGO.min_size / original_width;
-        local.min_scale_y = LOGO.min_size / original_height;
-        if (animation.scale_factor_x < min_scale_x) animation.scale_factor_x = min_scale_x;
-        if (animation.scale_factor_y < min_scale_y) animation.scale_factor_y = min_scale_y;
-    }
-    
-    // Calculate final dimensions
-    if (LOGO.keep_aspect_ratio) {
-        animation.scaled_width = original_width * animation.scale_factor;
-        animation.scaled_height = original_height * animation.scale_factor;
-    } else {
-        animation.scaled_width = original_width * animation.scale_factor_x;
-        animation.scaled_height = original_height * animation.scale_factor_y;
-    }
+    // Calculate scale factors for stretching to full screen
+    animation.scale_factor_x = screen.width / original_width;
+    animation.scale_factor_y = screen.height / original_height;
 }
 
 fun hide_animation() {
@@ -179,23 +145,18 @@ fun show_animation() {
 fun update_animation() {
     if (animation.length == 0) return;
     
-    // Load image and apply scaling
+    // Load image and scale to full screen
     current_image = animation.images[animation.current_frame];
     
-    // Scale the image based on the calculated scaling factor
-    local.scaled_image;
-    if (LOGO.keep_aspect_ratio) {
-        scaled_image = current_image.Scale(animation.scaled_width, animation.scaled_height);
-    } else {
-        scaled_image = current_image.Scale(animation.scaled_width, animation.scaled_height);
-    }
+    // Scale the image to exactly fill the screen (stretching if necessary)
+    local.scaled_image = current_image.Scale(animation.scaled_width, animation.scaled_height);
     
     // Update the animation sprite with scaled image
     animation.sprite.SetImage(scaled_image);
 
-    // Position the sprite at the center
-    animation.sprite.SetX(LOGO.center.x * screen.width - animation.scaled_width / 2);
-    animation.sprite.SetY(LOGO.center.y * screen.height - animation.scaled_height / 2);
+    // Position the sprite at top-left (0,0) to fill entire screen
+    animation.sprite.SetX(0);
+    animation.sprite.SetY(0);
 
     // Then update current frame and reset if necessary
     animation.current_frame++;
