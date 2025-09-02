@@ -3,7 +3,7 @@
 }:
 pkgs.stdenv.mkDerivation rec {
   pname = "kartoza-plymouth";
-  version = "0.0.9";
+  version = "0.0.10";
 
   src = ./src;
 
