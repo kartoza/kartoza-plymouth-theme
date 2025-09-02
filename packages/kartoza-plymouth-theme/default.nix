@@ -3,7 +3,7 @@
 }:
 pkgs.stdenv.mkDerivation rec {
   pname = "kartoza-plymouth";
-  version = "0.0.11";
+  version = "0.0.12";
 
   src = ./src;
 
@@ -25,8 +25,6 @@ pkgs.stdenv.mkDerivation rec {
   installPhase = ''
     cp -r kartoza/images $out/share/plymouth/themes/kartoza
     cp kartoza/kartoza.script $out/share/plymouth/themes/kartoza
-    cp kartoza/background.png $out/share/plymouth/themes/kartoza
-    cp kartoza/logo.png $out/share/plymouth/themes/kartoza
     [ -f kartoza/preview.sh ] && cp kartoza/preview.sh $out/share/plymouth/themes/kartoza/ || true
     cat kartoza/kartoza.plymouth | sed  "s@\/usr\/@$out\/@" > $out/share/plymouth/themes/kartoza/kartoza.plymouth
   '';
