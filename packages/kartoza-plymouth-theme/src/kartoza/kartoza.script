@@ -88,13 +88,23 @@ PROMPT.bullet = "*";
 screen.width = Window.GetWidth();
 screen.height = Window.GetHeight();
 
-// Set background color
+// Set background color (using the cream/beige color from the animation)
 Window.SetBackgroundTopColor(BG_COLOR.red, BG_COLOR.green, BG_COLOR.blue);
 Window.SetBackgroundBottomColor(BG_COLOR.red, BG_COLOR.green, BG_COLOR.blue);
+
+// Debug: Add screen size info for troubleshooting
+debug("Screen: " + screen.width + "x" + screen.height);
+
+// Additional debug info for multi-monitor setups
+local.aspect_ratio = screen.width / screen.height;
+debug("Aspect: " + aspect_ratio);
 
 // Initialize global state
 process = Plymouth.GetMode();
 flow = "run";
+
+// Force the animation to be visible immediately
+global.animation_ready = 0;
 
 
 # ------------------------------- Animation -----------------------------------
@@ -125,6 +135,16 @@ if (animation.length > 0) {
     local.original_width = first_image.GetWidth();
     local.original_height = first_image.GetHeight();
     
+    // Debug: Show original image dimensions
+    debug("Image: " + original_width + "x" + original_height);
+    
+    // Ensure we have valid screen dimensions (fallback for multi-monitor issues)
+    if (screen.width <= 0 || screen.height <= 0) {
+        screen.width = 1920;  // Fallback to common resolution
+        screen.height = 1080;
+        debug("Fallback: Using 1920x1080");
+    }
+    
     // For full screen without aspect ratio, always use screen dimensions
     animation.scaled_width = screen.width;
     animation.scaled_height = screen.height;
@@ -132,6 +152,29 @@ if (animation.length > 0) {
     // Calculate scale factors for stretching to full screen
     animation.scale_factor_x = screen.width / original_width;
     animation.scale_factor_y = screen.height / original_height;
+    
+    // Debug: Show scaling information
+    debug("Scale: " + animation.scale_factor_x + "x" + animation.scale_factor_y);
+    
+    // Initialize the sprite position and properties immediately
+    animation.sprite.SetX(0);
+    animation.sprite.SetY(0);
+    animation.sprite.SetZ(-100);
+    animation.sprite.SetOpacity(1);
+    
+    // Scale and set the first frame immediately to show animation right away
+    local.first_scaled = first_image.Scale(animation.scaled_width, animation.scaled_height);
+    animation.sprite.SetImage(first_scaled);
+    
+    // Start animation immediately
+    animation.current_frame = 0;
+    
+    // Mark animation as ready and force immediate display
+    global.animation_ready = 1;
+    
+    // Trigger first animation update immediately
+    update_animation();
+}
 }
 
 fun hide_animation() {
@@ -145,20 +188,32 @@ fun show_animation() {
 fun update_animation() {
     if (animation.length == 0) return;
     
-    // Load image and scale to full screen
+    // Load current frame
     current_image = animation.images[animation.current_frame];
     
-    // Scale the image to exactly fill the screen (stretching if necessary)
-    local.scaled_image = current_image.Scale(animation.scaled_width, animation.scaled_height);
+    // Ensure we have valid dimensions
+    local.target_width = screen.width;
+    local.target_height = screen.height;
     
-    // Update the animation sprite with scaled image
+    if (target_width <= 0 || target_height <= 0) {
+        target_width = 1920;
+        target_height = 1080;
+    }
+    
+    // Always scale to exact screen dimensions (no aspect ratio preservation)
+    local.scaled_image = current_image.Scale(target_width, target_height);
+    
+    // Update the animation sprite
     animation.sprite.SetImage(scaled_image);
 
-    // Position the sprite at top-left (0,0) to fill entire screen
+    // Position at origin to fill screen completely
     animation.sprite.SetX(0);
     animation.sprite.SetY(0);
+    
+    // Ensure sprite fills the screen by setting opacity to full
+    animation.sprite.SetOpacity(1);
 
-    // Then update current frame and reset if necessary
+    // Update frame counter
     animation.current_frame++;
     if (animation.current_frame == animation.length) animation.current_frame = 0;
 }
@@ -338,7 +393,10 @@ Plymouth.SetDisplayNormalFunction(display_normal_callback);
 #
 
 fun refresh_callback() {
-    if (global.flow == "run") update_animation();
+    // Always update animation if it's ready, regardless of flow state
+    if (global.animation_ready) {
+        update_animation();
+    }
 }
 
 Plymouth.SetRefreshFunction(refresh_callback);

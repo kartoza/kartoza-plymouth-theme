@@ -136,6 +136,12 @@
         "NIXBACKUPS",
         "NIXROOT",
         "keyformat",
-        "keylocation"
+        "keylocation",
+        "shellcheck",
+        "chafa",
+        "plymouthd",
+        "killall",
+        "Hugopikachu",
+        "myhost"
             ]
 }
