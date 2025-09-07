@@ -10,31 +10,39 @@ VSCODE_DIR=".vscode"
 LOG_FILE="vscode.log"
 
 REQUIRED_EXTENSIONS=(
-    shd101wyy.markdown-preview-enhanced@0.8.18
-    mkhl.direnv@0.17.0
-    kamadorueda.alejandra@1.0.0
-    GitHub.copilot@1.335.0
-    GitHub.copilot-chat@0.28.5
-    rpinski.shebang-snippets@1.1.0
-    joffreykern.markdown-toc@1.4.0
-    waderyan.gitblame@11.1.3
-    pinage404.bash-extension-pack@2.0.0
-    spmeesseman.vscode-taskexplorer@2.13.2
-    bierner.markdown-mermaid@1.28.0
-    brettm12345.nixfmt-vscode@0.0.1
-    pinage404.nix-extension-pack@3.0.0
-    mads-hartmann.bash-ide-vscode@1.43.0
-    foxundermoon.shell-format@7.2.5
-    jeff-hykin.better-shellscript-syntax@1.10.0
-    marp-team.marp-vscode@3.2.0
-    timonwong.shellcheck@0.37.7
-    arrterian.nix-env-selector@1.1.0
-    bbenoist.Nix@1.0.1
-    rogalmic.bash-debug@0.3.9
-    formulahendry.code-runner@0.12.2
-    jnoortheen.nix-ide@0.4.18
-    naumovs.color-highlight@2.8.0)
-
+arrterian.nix-env-selector@1.1.0
+mads-hartmann.bash-ide-vscode@1.43.0
+bbenoist.Nix@1.0.1
+kamadorueda.alejandra@1.0.0
+spmeesseman.vscode-taskexplorer@2.13.2
+pinage404.nix-extension-pack@3.0.0
+waderyan.gitblame@11.1.4
+pinage404.bash-extension-pack@2.0.0
+waderyan.gitblame@11.1.3
+jeff-hykin.better-shellscript-syntax@1.10.0
+naumovs.color-highlight@2.8.0
+shd101wyy.markdown-preview-enhanced@0.8.19
+formulahendry.code-runner@0.12.2
+GitHub.copilot-chat@0.28.5
+marp-team.marp-vscode@3.3.0
+jnoortheen.nix-ide@0.4.22
+marp-team.marp-vscode@3.2.0
+GitHub.copilot@1.364.0
+rogalmic.bash-debug@0.3.9
+rpinski.shebang-snippets@1.1.0
+joffreykern.markdown-toc@1.4.0
+jnoortheen.nix-ide@0.4.18
+GitHub.copilot-chat@0.30.3
+GitHub.copilot@1.335.0
+timonwong.shellcheck@0.37.7
+foxundermoon.shell-format@7.2.8
+mkhl.direnv@0.17.0
+timonwong.shellcheck@0.38.3
+brettm12345.nixfmt-vscode@0.0.1
+foxundermoon.shell-format@7.2.5
+shd101wyy.markdown-preview-enhanced@0.8.18
+bierner.markdown-mermaid@1.28.0
+)
 # ----------------------------------------------
 # Functions
 # ----------------------------------------------
