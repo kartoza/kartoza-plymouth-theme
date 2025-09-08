@@ -82,6 +82,11 @@ screen.height = Window.GetHeight();
 Window.SetBackgroundTopColor(BG_COLOR.red, BG_COLOR.green, BG_COLOR.blue);
 Window.SetBackgroundBottomColor(BG_COLOR.red, BG_COLOR.green, BG_COLOR.blue);
 
+// Load background
+bg = Image("background.png");
+bg_sprite = Sprite(bg);
+bg_sprite.SetZ(-1000); // keep at back
+
 // Initialize global state
 process = Plymouth.GetMode();
 flow = "run";
