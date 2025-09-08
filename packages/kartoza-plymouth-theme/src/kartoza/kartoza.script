@@ -82,9 +82,12 @@ screen.height = Window.GetHeight();
 Window.SetBackgroundTopColor(BG_COLOR.red, BG_COLOR.green, BG_COLOR.blue);
 Window.SetBackgroundBottomColor(BG_COLOR.red, BG_COLOR.green, BG_COLOR.blue);
 
-// Load background
+// Load background and scale to screen dimensions
 bg = Image("background.png");
-bg_sprite = Sprite(bg);
+bg_scaled = bg.Scale(screen.width, screen.height);
+bg_sprite = Sprite(bg_scaled);
+bg_sprite.SetX(0);
+bg_sprite.SetY(0);
 bg_sprite.SetZ(-1000); // keep at back
 
 // Initialize global state
