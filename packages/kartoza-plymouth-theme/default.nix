@@ -3,13 +3,11 @@
 }:
 pkgs.stdenv.mkDerivation rec {
   pname = "kartoza-plymouth";
-  version = "0.0.16";
+  version = "0.0.17";
 
   src = ./src;
 
-  buildInputs = [
-    pkgs.git
-  ];
+  buildInputs = [ pkgs.git ];
 
   #do nothing since we have src in this folder
   unpackPhase = ''
@@ -20,7 +18,7 @@ pkgs.stdenv.mkDerivation rec {
     mkdir -p $out/share/plymouth/themes/kartoza
   '';
 
-  buildPhase = '''';
+  buildPhase = "";
 
   installPhase = ''
     cp -r kartoza/images $out/share/plymouth/themes/kartoza
