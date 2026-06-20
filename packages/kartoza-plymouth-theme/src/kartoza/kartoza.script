@@ -42,11 +42,11 @@ MAIN_FONT = "NotoSans Bold 22";
 SECONDARY_FONT = "NotoSans Regular 14";
 
 // Position of the animation in percentage of the screen dimensions
-LOGO.center.x = 0.5;
-LOGO.center.y = 0.5;
+LOGO.center.x = 0.1;
+LOGO.center.y = 0.1;
 
 // Position of the boot message in percentage of the screen dimensions
-BOOT_MESSAGE.center.x = 0.5;
+BOOT_MESSAGE.center.x = 0.1;
 BOOT_MESSAGE.center.y = 0.8;
 
 // Position of the progress bar in percentage of the screen dimensions
@@ -54,15 +54,15 @@ BAR.center.x = 0.5;
 BAR.center.y = 0.9;
 
 // Position of the status message in percentage of the screen dimensions
-STATUS.center.x = 0.5;
+STATUS.center.x = 0.1;
 STATUS.center.y = 0.85;
 
 // Position of the lock icon in percentage of the screen dimensions
-LOCK.center.x = 0.5;
-LOCK.center.y = 0.75;
+LOCK.center.x = 0.1;
+LOCK.center.y = 0.85;
 
 // Position of the password prompt in percentage of the screen dimensions
-PROMPT.center.x = 0.5;
+PROMPT.center.x = 0.1;
 PROMPT.center.y = 0.9;
 
 // Placeholder in password prompt
