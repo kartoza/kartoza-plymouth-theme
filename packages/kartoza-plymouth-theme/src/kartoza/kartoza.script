@@ -35,27 +35,41 @@ SECONDARY_COLOR.blue = 0.77647;
 
 # ----------------------------- Configuration ---------------------------------
 
-// Font for boot message
-MAIN_FONT = "NotoSans Bold 22";
+// Font for boot message (now smaller — sits at the bottom of the stack
+// below the status text, so it can't be the loudest element).
+MAIN_FONT = "NotoSans Regular 8";
 
 // Font for password prompt
 SECONDARY_FONT = "NotoSans Regular 14";
 
-// Position of the animation in percentage of the screen dimensions
+// Font for the status message (systemd unit names) between the bar
+// and the boot message.
+STATUS_FONT = "NotoSans Regular 6";
+
+// Position of the animation in percentage of the screen dimensions.
+// Right side of the screen, vertically centred, center about 1/4 of
+// the screen width away from the right edge.
 LOGO.center.x = 0.75;
 LOGO.center.y = 0.5;
 
-// Position of the boot message in percentage of the screen dimensions
-BOOT_MESSAGE.center.x = 0.1;
-BOOT_MESSAGE.center.y = 0.8;
+// Common left offset for the bar + status + boot-message stack.
+// Absolute pixels (not a screen fraction) so it's consistent across
+// framebuffer resolutions — 100 px in from the left edge.
+LEFT_EDGE_PX = 85;
 
-// Position of the progress bar in percentage of the screen dimensions
-BAR.center.x = 0.5;
-BAR.center.y = 0.9;
+// Progress bar width still spans from the yellow "OUR VISION" rule
+// column to just past the "d" of "and" in the vision statement.
+// Kept as a fraction so it stretches with the splash.
+BAR.right = 0.21;
 
-// Position of the status message in percentage of the screen dimensions
-STATUS.center.x = 0.2;
-STATUS.center.y = 0.85;
+// Vertical anchoring: pixel offset from the BOTTOM of the screen for
+// each element in the stack.  Reading top-to-bottom, the order is:
+//   BAR         (highest of the three)
+//   STATUS
+//   BOOT_MESSAGE (lowest, right above the bottom edge)
+BAR_FROM_BOTTOM          = 80;
+STATUS_FROM_BOTTOM       = 55;
+BOOT_MESSAGE_FROM_BOTTOM = 25;
 
 // Position of the lock icon in percentage of the screen dimensions
 LOCK.center.x = 0.3;
@@ -154,8 +168,10 @@ if (process == "shutdown") boot_message.text = "Kartoza NixOS Shutting Down ..."
 boot_message.sprite = Sprite();
 boot_message.image = Image.Text(boot_message.text, MAIN_COLOR.red, MAIN_COLOR.green, MAIN_COLOR.blue, 1, MAIN_FONT);
 boot_message.sprite.SetImage(boot_message.image);
-boot_message.sprite.SetX(BOOT_MESSAGE.center.x * screen.width - boot_message.image.GetWidth() / 2);
-boot_message.sprite.SetY(BOOT_MESSAGE.center.y * screen.height - boot_message.image.GetHeight() / 2);
+// Pinned to the bottom-left: LEFT_EDGE_PX in from the left, a small
+// fixed pixel offset from the bottom edge.
+boot_message.sprite.SetX(LEFT_EDGE_PX);
+boot_message.sprite.SetY(screen.height - BOOT_MESSAGE_FROM_BOTTOM - boot_message.image.GetHeight());
 
 fun hide_boot_message() {
     boot_message.sprite.SetOpacity(0);
@@ -173,17 +189,24 @@ fun show_boot_message() {
 
 // Only load progress bar logic in boot sequence
 if (process == "boot") {
-    // Load and set the progress bar background
-    bar.background.image = Image("bar-background.png");
-    bar.background.sprite = Sprite(bar.background.image);
-    bar.background.sprite.SetX(BAR.center.x * screen.width - bar.background.image.GetWidth() / 2);
-    bar.background.sprite.SetY(BAR.center.y * screen.height - bar.background.image.GetHeight() / 2);
+    // Bar geometry — width starts at LEFT_EDGE_PX and extends to
+    // BAR.right as a fraction of screen width; height is fixed.
+    bar_width  = (BAR.right * screen.width) - LEFT_EDGE_PX;
+    bar_height = 6;
+    bar_top_y  = screen.height - BAR_FROM_BOTTOM - bar_height;
 
-    // Load the progress bar and display it anchored to the left of the background bar
-    bar.image = Image("bar-progress.png");
+    // Load, scale, and place the progress-bar background (grey trough)
+    bar.background.image  = Image("bar-background.png").Scale(bar_width, bar_height);
+    bar.background.sprite = Sprite(bar.background.image);
+    bar.background.sprite.SetX(LEFT_EDGE_PX);
+    bar.background.sprite.SetY(bar_top_y);
+
+    // Load the progress bar (orange fill) at the same span; the
+    // refresh callback will Crop() it to (progress * bar_width).
+    bar.image  = Image("bar-progress.png").Scale(bar_width, bar_height);
     bar.sprite = Sprite();
-    bar.sprite.SetX(BAR.center.x * screen.width - bar.background.image.GetWidth() / 2);
-    bar.sprite.SetY(BAR.center.y * screen.height - bar.background.image.GetHeight() / 2);
+    bar.sprite.SetX(LEFT_EDGE_PX);
+    bar.sprite.SetY(bar_top_y);
 
     fun hide_boot_progress() {
         bar.sprite.SetOpacity(0);
@@ -213,11 +236,14 @@ if (process == "boot") {
 status_message.sprite = Sprite();
 
 fun update_status_callback(status) {
-    status_message.image = Image.Text(status, SECONDARY_COLOR.red, SECONDARY_COLOR.green, SECONDARY_COLOR.blue, 1, SECONDARY_FONT);
+    // Small grey text (MAIN_COLOR is Kartoza grey ≈ #8B8B8B), pinned
+    // to the bottom-left at LEFT_EDGE_PX in from the left, sitting
+    // between the bar (above) and the boot message (below).
+    status_message.image = Image.Text(status, MAIN_COLOR.red, MAIN_COLOR.green, MAIN_COLOR.blue, 1, STATUS_FONT);
 
     status_message.sprite.SetImage(status_message.image);
-    status_message.sprite.SetX(STATUS.center.x * screen.width - status_message.image.GetWidth() / 2);
-    status_message.sprite.SetY(STATUS.center.y * screen.height - status_message.image.GetHeight() / 2);
+    status_message.sprite.SetX(LEFT_EDGE_PX);
+    status_message.sprite.SetY(screen.height - STATUS_FROM_BOTTOM - status_message.image.GetHeight());
 }
 
 fun root_mounted_callback() {
