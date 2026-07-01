@@ -35,16 +35,17 @@ SECONDARY_COLOR.blue = 0.77647;
 
 # ----------------------------- Configuration ---------------------------------
 
-// Font for boot message (now smaller — sits at the bottom of the stack
-// below the status text, so it can't be the loudest element).
-MAIN_FONT = "NotoSans Regular 8";
+// Font for the boot message (bottom line of the stack).  Sized for a
+// ~1920x1080 framebuffer so it stays readable on real hardware.
+MAIN_FONT = "NotoSans Regular 16";
 
-// Font for password prompt
-SECONDARY_FONT = "NotoSans Regular 14";
+// Font for the password prompt (bullets / placeholder text inside the
+// entry widget).
+SECONDARY_FONT = "NotoSans Regular 22";
 
 // Font for the status message (systemd unit names) between the bar
 // and the boot message.
-STATUS_FONT = "NotoSans Regular 6";
+STATUS_FONT = "NotoSans Regular 14";
 
 // Position of the animation in percentage of the screen dimensions.
 // Right side of the screen, vertically centred, center about 1/4 of
@@ -52,32 +53,26 @@ STATUS_FONT = "NotoSans Regular 6";
 LOGO.center.x = 0.75;
 LOGO.center.y = 0.5;
 
-// Common left offset for the bar + status + boot-message stack.
-// Absolute pixels (not a screen fraction) so it's consistent across
-// framebuffer resolutions — 100 px in from the left edge.
-LEFT_EDGE_PX = 85;
+// Left edge of the bar / status / boot-message stack — a fraction of
+// screen width so it lines up with the yellow "OUR VISION" rule in the
+// background image (which sits at ~115/1920 = 0.06 of the width).
+// LEFT_EDGE_PX is computed after screen.width is populated below.
+LEFT_EDGE_FRACTION = 0.06;
 
-// Progress bar width still spans from the yellow "OUR VISION" rule
-// column to just past the "d" of "and" in the vision statement.
-// Kept as a fraction so it stretches with the splash.
+// Progress bar right edge as a fraction of screen width; keeps the
+// bar spanning the yellow rule column to just past the "d" of "and"
+// in the vision statement regardless of resolution.
 BAR.right = 0.21;
 
-// Vertical anchoring: pixel offset from the BOTTOM of the screen for
+// Vertical anchoring: pixel offsets from the BOTTOM of the screen for
 // each element in the stack.  Reading top-to-bottom, the order is:
 //   BAR         (highest of the three)
 //   STATUS
 //   BOOT_MESSAGE (lowest, right above the bottom edge)
-BAR_FROM_BOTTOM          = 80;
-STATUS_FROM_BOTTOM       = 55;
-BOOT_MESSAGE_FROM_BOTTOM = 25;
-
-// Position of the lock icon in percentage of the screen dimensions
-LOCK.center.x = 0.3;
-LOCK.center.y = 0.85;
-
-// Position of the password prompt in percentage of the screen dimensions
-PROMPT.center.x = 0.2;
-PROMPT.center.y = 0.9;
+// Sized so 14–16pt text has room to breathe.
+BAR_FROM_BOTTOM          = 120;
+STATUS_FROM_BOTTOM       = 80;
+BOOT_MESSAGE_FROM_BOTTOM = 35;
 
 // Placeholder in password prompt
 PROMPT.placeholder = "ZFS Password";
@@ -91,6 +86,10 @@ PROMPT.bullet = "*";
 // Get screen dimensions
 screen.width = Window.GetWidth();
 screen.height = Window.GetHeight();
+
+// Derived — now that we know the framebuffer size, pin the left edge
+// of the progress-bar / status / boot-message stack to it.
+LEFT_EDGE_PX = LEFT_EDGE_FRACTION * screen.width;
 
 // Set background color
 Window.SetBackgroundTopColor(BG_COLOR.red, BG_COLOR.green, BG_COLOR.blue);
@@ -261,19 +260,31 @@ Plymouth.SetRootMountedFunction(root_mounted_callback);
 
 // Only load password prompt logic in boot sequence
 if (process == "boot") {
-    // Load and place the lock icon
-    lock.image = Image("lock.png");
-    lock.width = lock.image.GetWidth();
+    // The password entry replaces the progress bar in the same slot at
+    // the bottom of the splash.  Scale the input pill to match the bar
+    // width so its left edge lines up with the yellow "OUR VISION"
+    // rule; give it a bit more height so the bullets are readable.
+    prompt.height = 40;
+    prompt.image  = Image("input.png").Scale(bar_width, prompt.height);
+    prompt.sprite = Sprite(prompt.image);
+
+    // Center Y matches the progress bar's center Y so the widget sits
+    // in the same visual slot.
+    prompt.center_x = LEFT_EDGE_PX + bar_width / 2;
+    prompt.center_y = bar_top_y + bar_height / 2;
+
+    prompt.sprite.SetX(LEFT_EDGE_PX);
+    prompt.sprite.SetY(prompt.center_y - prompt.height / 2);
+
+    // Load and place the lock icon — horizontally centered over the
+    // prompt widget, sitting a comfortable gap above it.
+    LOCK_GAP_PX = 90;
+    lock.image  = Image("lock.png");
+    lock.width  = lock.image.GetWidth();
     lock.height = lock.image.GetHeight();
     lock.sprite = Sprite(lock.image);
-    lock.sprite.SetX(LOCK.center.x * screen.width - lock.width / 2);
-    lock.sprite.SetY(LOCK.center.y * screen.height  - lock.height / 2);
-
-    // Load and place the password prompt
-    prompt.image = Image("input.png");
-    prompt.sprite = Sprite(prompt.image);
-    prompt.sprite.SetX(PROMPT.center.x * screen.width - prompt.image.GetWidth() / 2);
-    prompt.sprite.SetY(PROMPT.center.y * screen.height - prompt.image.GetHeight() / 2);
+    lock.sprite.SetX(prompt.center_x - lock.width / 2);
+    lock.sprite.SetY(prompt.center_y - prompt.height / 2 - LOCK_GAP_PX - lock.height);
 
     // Initiate the bullet string
     // We cannot set the position now as the image will change in size
@@ -293,7 +304,9 @@ if (process == "boot") {
         bullets.sprite.SetOpacity(1);
     }
 
-    fun display_password_callback(prompt, n_bullets) {
+    // Note: the first argument would shadow the global `prompt` sprite,
+    // which we need for center_x / center_y below.  Rename it here.
+    fun display_password_callback(prompt_text, n_bullets) {
         // Interrupt the normal flow
         global.flow = "password";
         show_password_screen();
@@ -310,10 +323,10 @@ if (process == "boot") {
 
         bullets.image = Image.Text(bullets.string, MAIN_COLOR.red, MAIN_COLOR.green, MAIN_COLOR.blue, 1, SECONDARY_FONT);
 
-        // Display bullets
+        // Display bullets centered inside the prompt pill.
         bullets.sprite.SetImage(bullets.image);
-        bullets.sprite.SetX(PROMPT.center.x * screen.width - bullets.image.GetWidth() / 2);
-        bullets.sprite.SetY(PROMPT.center.y * screen.height - bullets.image.GetHeight() / 2);
+        bullets.sprite.SetX(prompt.center_x - bullets.image.GetWidth() / 2);
+        bullets.sprite.SetY(prompt.center_y - bullets.image.GetHeight() / 2);
     }
 
     Plymouth.SetDisplayPasswordFunction(display_password_callback);
