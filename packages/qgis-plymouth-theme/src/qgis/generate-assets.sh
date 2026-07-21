@@ -47,8 +47,10 @@ find_font() {
   case "$hit" in
     *OpenSans-"$style".ttf) [ -f "$hit" ] && { echo "$hit"; return; } ;;
   esac
+  # -print -quit: stop at the first match instead of scanning the whole
+  # /nix/store (which is huge) — only reached when fontconfig is broken.
   hit="$(find /run/current-system/sw/share/X11/fonts /nix/store \
-    -maxdepth 6 -name "OpenSans-${style}.ttf" 2>/dev/null | head -n1)"
+    -maxdepth 6 -name "OpenSans-${style}.ttf" -print -quit 2>/dev/null)"
   [ -n "$hit" ] && { echo "$hit"; return; }
   echo "ERROR: Open Sans $style not found (set $envvar)" >&2; exit 1
 }
@@ -57,18 +59,19 @@ REG="$(find_font Regular OPEN_SANS_REGULAR)"
 
 # ---- PNG compressor -------------------------------------------------
 # The navy cartographic background is a 1920x1080 photographic texture;
-# as a 24-bit PNG it weighs ~4 MB, over the repo's 1 MB pre-commit
-# ceiling.  Palette-quantise it (with dithering, so the navy gradient
-# doesn't band) down to ~150 KB.  Prefer pngquant; fall back to
-# ImageMagick's PNG8 encoder if pngquant isn't installed.
+# as a 32-bit RGBA PNG it weighs ~4 MB, over the repo's 1 MB pre-commit
+# ceiling.  Re-encode it as an 8-bit, non-interlaced TRUECOLOR
+# (color-type 2) PNG: stripping the alpha channel and metadata brings
+# this dark, mostly-smooth artwork down to ~0.8 MB with no visible
+# quality loss.  Truecolor (not palette) is deliberate — it keeps the
+# asset in the same format GRUB's minimal PNG decoder accepts, so the
+# generator stays reusable across both the Plymouth and GRUB themes.
 compress_png() {
   local f="$1"
-  if command -v pngquant >/dev/null 2>&1; then
-    pngquant --quality=70-92 --speed 1 --force --output "$f" "$f"
-  else
-    magick "$f" -strip -dither FloydSteinberg -colors 256 \
-      -define png:compression-level=9 "PNG8:$f"
-  fi
+  magick "$f" -strip -interlace none -alpha off \
+    -define png:color-type=2 -define png:bit-depth=8 \
+    -define png:compression-level=9 "$f.tmp.png"
+  mv -f "$f.tmp.png" "$f"
 }
 
 # ---- 1. Navy cartographic background (1920x1080) --------------------
