@@ -4,11 +4,14 @@
 # from https://github.com/Hugopikachu/plymouth-theme-chain).  The look
 # reproduces the QGIS.ORG keynote title slide:
 #
-#   * background.png bakes in the navy cartographic backdrop plus the
-#     "Spatial without Compromise" strapline on the left,
-#   * the QGIS "Q" globe breathes gently on the right (animation frames),
+#   * background.png bakes in the navy cartographic backdrop, the
+#     "Spatial without Compromise" strapline AND the QGIS "Q" globe, so
+#     the whole composition scales with the framebuffer and never clips,
 #   * a QGIS-green progress bar / status stack sits bottom-left, aligned
 #     under the strapline.
+#
+# The splash is a static still (no logo animation) — only the progress
+# bar, status text and the ZFS password prompt are dynamic.
 
 # --------------------------------- Colors ------------------------------------
 #
@@ -38,11 +41,6 @@ SECONDARY_FONT = "NotoSans Regular 22";
 
 // Status message font (systemd unit names).
 STATUS_FONT = "NotoSans Regular 14";
-
-// QGIS "Q" globe position — right of centre, vertically centred, mirroring
-// the keynote title slide (logo right, strapline left).
-LOGO.center.x = 0.72;
-LOGO.center.y = 0.5;
 
 // Left edge of the progress / status / boot-message stack, as a fraction
 // of screen width, aligned under the baked-in strapline (x = 115/1920).
@@ -74,7 +72,9 @@ LEFT_EDGE_PX = LEFT_EDGE_FRACTION * screen.width;
 Window.SetBackgroundTopColor(BG_COLOR.red, BG_COLOR.green, BG_COLOR.blue);
 Window.SetBackgroundBottomColor(BG_COLOR.red, BG_COLOR.green, BG_COLOR.blue);
 
-// Load background and scale to the framebuffer.
+// Load background (navy map + strapline + Q, baked in) and scale it to
+// the framebuffer.  Everything visual except the dynamic widgets below
+// lives in this one image, so nothing can be clipped at the edges.
 bg = Image("background.png");
 bg_scaled = bg.Scale(screen.width, screen.height);
 bg_sprite = Sprite(bg_scaled);
@@ -83,41 +83,6 @@ bg_sprite.SetY(0);
 bg_sprite.SetZ(-1000);
 
 process = Plymouth.GetMode();
-flow = "run";
-
-
-# ------------------------------- Animation -----------------------------------
-#
-# The QGIS "Q" globe.  Frames are identical in size and differ only in
-# opacity (a calm breathe), so recentring by width keeps it rock-steady.
-
-animation.length = 0;
-animation.current_frame = 0;
-animation.sprite = Sprite();
-
-while (1) {
-    local.image = Image("animation/qgis-plymouth." + animation.length + ".png");
-    if (!image) break;
-    animation.images[animation.length++] = image;
-}
-
-fun hide_animation() {
-    animation.sprite.SetOpacity(0.3);
-}
-
-fun show_animation() {
-    animation.sprite.SetOpacity(1);
-}
-
-fun update_animation() {
-    current_image = animation.images[animation.current_frame];
-    animation.sprite.SetImage(current_image);
-    animation.sprite.SetX(LOGO.center.x * screen.width  - current_image.GetWidth()  / 2);
-    animation.sprite.SetY(LOGO.center.y * screen.height - current_image.GetHeight() / 2);
-
-    animation.current_frame++;
-    if (animation.current_frame == animation.length) animation.current_frame = 0;
-}
 
 
 # ------------------------------- Message -------------------------------------
@@ -231,9 +196,7 @@ if (process == "boot") {
     }
 
     fun display_password_callback(prompt_text, n_bullets) {
-        global.flow = "password";
         show_password_screen();
-        hide_animation();
         hide_boot_message();
         hide_boot_progress();
 
@@ -256,23 +219,12 @@ if (process == "boot") {
 #------------------------------ Display Normal --------------------------------
 
 fun display_normal_callback() {
-    global.flow = "run";
     hide_password_screen();
-    show_animation();
     show_boot_message();
     show_boot_progress();
 }
 
 Plymouth.SetDisplayNormalFunction(display_normal_callback);
-
-
-# -------------------------------- Refresh ------------------------------------
-
-fun refresh_callback() {
-    if (global.flow == "run") update_animation();
-}
-
-Plymouth.SetRefreshFunction(refresh_callback);
 
 
 #----------------------------------------- Quit --------------------------------

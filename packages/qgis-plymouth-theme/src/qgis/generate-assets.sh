@@ -6,9 +6,13 @@
 # Compromise" keynote title slide:
 #   * a dark navy hand-drawn cartographic background,
 #   * the "Spatial without Compromise" strapline (thin Open Sans Light),
-#   * the QGIS "Q" globe on the right (rendered as a gently pulsing
-#     Plymouth sprite — see qgis.script),
+#   * the QGIS "Q" globe on the right,
 #   * a QGIS-green boot progress bar.
+#
+# The strapline AND the Q are baked straight into background.png (rather
+# than drawn as separate Plymouth sprites) so they scale proportionally
+# with the framebuffer at any resolution and can never be clipped by the
+# screen edge — the splash is a static, correctly-composed still.
 #
 # Everything this script emits is committed to git so the Nix build
 # never has to run ImageMagick.  Re-run it only when you change the
@@ -20,8 +24,7 @@ set -euo pipefail
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 src="$here/source"
 img="$here/images"
-anim="$img/animation"
-mkdir -p "$img" "$anim"
+mkdir -p "$img"
 
 # ---- Palette (sampled from the keynote title slide) -----------------
 NAVY="#0e2230"      # base background navy
@@ -96,33 +99,22 @@ magick -background none -fill "$MUTE" -font "$REG" -pointsize 30 \
   label:"Spatial visualization and decision-making tools for everyone" \
   "$img/.understrap.png"
 
-# ---- 3. background.png: map + baked strapline (logo is a sprite) ----
+# ---- 3. QGIS "Q" globe, sized to match the keynote composition ------
+magick "$src/qgis-q.png" -resize x360 "$img/.q.png"
+q_w="$(magick identify -format '%w' "$img/.q.png")"
+q_h="$(magick identify -format '%h' "$img/.q.png")"
+# Centre the Q at 72% width / 50% height (its position on the keynote
+# title slide), converted to a top-left offset for -geometry.
+q_x="$(python3 -c "print(int(0.72*1920 - $q_w/2))")"
+q_y="$(python3 -c "print(int(0.50*1080 - $q_h/2))")"
+
+# ---- 4. background.png: map + baked strapline + baked Q -------------
 magick "$img/.map-bg.png" \
   "$img/.title.png"      -gravity NorthWest -geometry +115+330 -composite \
   "$img/.understrap.png" -gravity NorthWest -geometry +120+650 -composite \
+  "$img/.q.png"          -gravity NorthWest -geometry "+${q_x}+${q_y}" -composite \
   "$img/background.png"
 compress_png "$img/background.png"
-
-# ---- 4. Pulsing QGIS "Q" animation frames --------------------------
-# A calm opacity breathe (0.82 -> 1.0 -> 0.82) over 60 frames.  The Q
-# stays a constant size so it never jitters; qgis.script recentres each
-# frame by width, so identical dimensions keep it rock-steady.
-magick "$src/qgis-q.png" -resize x360 "$img/.q360.png"
-frames=60
-python3 - "$frames" <<'PY' > "$img/.opacities"
-import math, sys
-n = int(sys.argv[1])
-for i in range(n):
-    # sine breathe between 0.82 and 1.0
-    o = 0.82 + 0.18 * (0.5 - 0.5 * math.cos(2 * math.pi * i / n))
-    print(f"{o:.4f}")
-PY
-i=0
-while IFS= read -r op; do
-  magick "$img/.q360.png" -channel A -evaluate multiply "$op" +channel \
-    "$anim/qgis-plymouth.${i}.png"
-  i=$((i + 1))
-done < "$img/.opacities"
 
 # ---- 5. Progress bar (navy trough + QGIS-green fill) ---------------
 magick -size 512x6 xc:"rgba(255,255,255,0.14)" "$img/bar-background.png"
