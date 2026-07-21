@@ -1,0 +1,282 @@
+# QGIS "Spatial without Compromise" Plymouth theme.
+#
+# Structure adapted from the Kartoza Plymouth theme (which in turn came
+# from https://github.com/Hugopikachu/plymouth-theme-chain).  The look
+# reproduces the QGIS.ORG keynote title slide:
+#
+#   * background.png bakes in the navy cartographic backdrop plus the
+#     "Spatial without Compromise" strapline on the left,
+#   * the QGIS "Q" globe breathes gently on the right (animation frames),
+#   * a QGIS-green progress bar / status stack sits bottom-left, aligned
+#     under the strapline.
+
+# --------------------------------- Colors ------------------------------------
+#
+# Background navy (matches background.png so any letterboxing blends in).
+BG_COLOR.red   = 0.05490;   // #0e2230
+BG_COLOR.green = 0.13333;
+BG_COLOR.blue  = 0.18824;
+
+// Message / status text — a light grey-blue that reads on navy (#aab8c0).
+MAIN_COLOR.red   = 0.66667;
+MAIN_COLOR.green = 0.72157;
+MAIN_COLOR.blue  = 0.75294;
+
+// Accent — QGIS flag green (#93b02a).  Used for the password bullets.
+ACCENT_COLOR.red   = 0.57647;
+ACCENT_COLOR.green = 0.69020;
+ACCENT_COLOR.blue  = 0.16471;
+
+
+# ----------------------------- Configuration ---------------------------------
+
+// Boot message font (bottom line of the stack).  Sized for ~1920x1080.
+MAIN_FONT = "NotoSans Regular 16";
+
+// Password prompt font (bullets / placeholder inside the entry pill).
+SECONDARY_FONT = "NotoSans Regular 22";
+
+// Status message font (systemd unit names).
+STATUS_FONT = "NotoSans Regular 14";
+
+// QGIS "Q" globe position — right of centre, vertically centred, mirroring
+// the keynote title slide (logo right, strapline left).
+LOGO.center.x = 0.72;
+LOGO.center.y = 0.5;
+
+// Left edge of the progress / status / boot-message stack, as a fraction
+// of screen width, aligned under the baked-in strapline (x = 115/1920).
+LEFT_EDGE_FRACTION = 0.06;
+
+// Progress bar right edge as a fraction of screen width.
+BAR.right = 0.24;
+
+// Pixel offsets from the BOTTOM of the screen for the stack (top to
+// bottom: bar, status, boot message).
+BAR_FROM_BOTTOM          = 120;
+STATUS_FROM_BOTTOM       = 80;
+BOOT_MESSAGE_FROM_BOTTOM = 35;
+
+// Placeholder shown before the user types their disk passphrase.
+PROMPT.placeholder = "ZFS Password";
+
+// Character used to obfuscate the password.
+PROMPT.bullet = "*";
+
+
+# ------------------------------ Initialization -------------------------------
+
+screen.width  = Window.GetWidth();
+screen.height = Window.GetHeight();
+
+LEFT_EDGE_PX = LEFT_EDGE_FRACTION * screen.width;
+
+Window.SetBackgroundTopColor(BG_COLOR.red, BG_COLOR.green, BG_COLOR.blue);
+Window.SetBackgroundBottomColor(BG_COLOR.red, BG_COLOR.green, BG_COLOR.blue);
+
+// Load background and scale to the framebuffer.
+bg = Image("background.png");
+bg_scaled = bg.Scale(screen.width, screen.height);
+bg_sprite = Sprite(bg_scaled);
+bg_sprite.SetX(0);
+bg_sprite.SetY(0);
+bg_sprite.SetZ(-1000);
+
+process = Plymouth.GetMode();
+flow = "run";
+
+
+# ------------------------------- Animation -----------------------------------
+#
+# The QGIS "Q" globe.  Frames are identical in size and differ only in
+# opacity (a calm breathe), so recentring by width keeps it rock-steady.
+
+animation.length = 0;
+animation.current_frame = 0;
+animation.sprite = Sprite();
+
+while (1) {
+    local.image = Image("animation/qgis-plymouth." + animation.length + ".png");
+    if (!image) break;
+    animation.images[animation.length++] = image;
+}
+
+fun hide_animation() {
+    animation.sprite.SetOpacity(0.3);
+}
+
+fun show_animation() {
+    animation.sprite.SetOpacity(1);
+}
+
+fun update_animation() {
+    current_image = animation.images[animation.current_frame];
+    animation.sprite.SetImage(current_image);
+    animation.sprite.SetX(LOGO.center.x * screen.width  - current_image.GetWidth()  / 2);
+    animation.sprite.SetY(LOGO.center.y * screen.height - current_image.GetHeight() / 2);
+
+    animation.current_frame++;
+    if (animation.current_frame == animation.length) animation.current_frame = 0;
+}
+
+
+# ------------------------------- Message -------------------------------------
+
+if (process == "boot")     boot_message.text = "Kartoza NixOS Starting ...";
+if (process == "reboot")   boot_message.text = "Kartoza NixOS Restarting ...";
+if (process == "shutdown") boot_message.text = "Kartoza NixOS Shutting Down ...";
+
+boot_message.sprite = Sprite();
+boot_message.image = Image.Text(boot_message.text, MAIN_COLOR.red, MAIN_COLOR.green, MAIN_COLOR.blue, 1, MAIN_FONT);
+boot_message.sprite.SetImage(boot_message.image);
+boot_message.sprite.SetX(LEFT_EDGE_PX);
+boot_message.sprite.SetY(screen.height - BOOT_MESSAGE_FROM_BOTTOM - boot_message.image.GetHeight());
+
+fun hide_boot_message() {
+    boot_message.sprite.SetOpacity(0);
+}
+
+fun show_boot_message() {
+    boot_message.sprite.SetOpacity(1);
+}
+
+
+# ------------------------------ Progress Bar ---------------------------------
+
+if (process == "boot") {
+    bar_width  = (BAR.right * screen.width) - LEFT_EDGE_PX;
+    bar_height = 6;
+    bar_top_y  = screen.height - BAR_FROM_BOTTOM - bar_height;
+
+    bar.background.image  = Image("bar-background.png").Scale(bar_width, bar_height);
+    bar.background.sprite = Sprite(bar.background.image);
+    bar.background.sprite.SetX(LEFT_EDGE_PX);
+    bar.background.sprite.SetY(bar_top_y);
+
+    bar.image  = Image("bar-progress.png").Scale(bar_width, bar_height);
+    bar.sprite = Sprite();
+    bar.sprite.SetX(LEFT_EDGE_PX);
+    bar.sprite.SetY(bar_top_y);
+
+    fun hide_boot_progress() {
+        bar.sprite.SetOpacity(0);
+        bar.background.sprite.SetOpacity(0);
+    }
+
+    fun show_boot_progress() {
+        bar.sprite.SetOpacity(1);
+        bar.background.sprite.SetOpacity(1);
+    }
+
+    fun boot_progress_callback(time, progress) {
+        bar.sprite.SetImage(bar.image.Crop(0, 0, progress * bar.image.GetWidth(), bar.image.GetHeight()));
+    }
+
+    Plymouth.SetBootProgressFunction(boot_progress_callback);
+}
+
+
+# ----------------------------- Status Update ---------------------------------
+
+status_message.sprite = Sprite();
+
+fun update_status_callback(status) {
+    status_message.image = Image.Text(status, MAIN_COLOR.red, MAIN_COLOR.green, MAIN_COLOR.blue, 1, STATUS_FONT);
+    status_message.sprite.SetImage(status_message.image);
+    status_message.sprite.SetX(LEFT_EDGE_PX);
+    status_message.sprite.SetY(screen.height - STATUS_FROM_BOTTOM - status_message.image.GetHeight());
+}
+
+fun root_mounted_callback() {
+    update_status_callback("Root successfully mounted");
+}
+
+Plymouth.SetUpdateStatusFunction(update_status_callback);
+Plymouth.SetRootMountedFunction(root_mounted_callback);
+
+
+# ---------------------------- Password dialog --------------------------------
+
+if (process == "boot") {
+    prompt.height = 40;
+    prompt.image  = Image("input.png").Scale(bar_width, prompt.height);
+    prompt.sprite = Sprite(prompt.image);
+
+    prompt.center_x = LEFT_EDGE_PX + bar_width / 2;
+    prompt.center_y = bar_top_y + bar_height / 2;
+
+    prompt.sprite.SetX(LEFT_EDGE_PX);
+    prompt.sprite.SetY(prompt.center_y - prompt.height / 2);
+
+    LOCK_GAP_PX = 90;
+    lock.image  = Image("lock.png");
+    lock.width  = lock.image.GetWidth();
+    lock.height = lock.image.GetHeight();
+    lock.sprite = Sprite(lock.image);
+    lock.sprite.SetX(prompt.center_x - lock.width / 2);
+    lock.sprite.SetY(prompt.center_y - prompt.height / 2 - LOCK_GAP_PX - lock.height);
+
+    bullets.sprite = Sprite();
+
+    fun hide_password_screen() {
+        lock.sprite.SetOpacity(0);
+        prompt.sprite.SetOpacity(0);
+        bullets.sprite.SetOpacity(0);
+    }
+
+    fun show_password_screen() {
+        lock.sprite.SetOpacity(1);
+        prompt.sprite.SetOpacity(1);
+        bullets.sprite.SetOpacity(1);
+    }
+
+    fun display_password_callback(prompt_text, n_bullets) {
+        global.flow = "password";
+        show_password_screen();
+        hide_animation();
+        hide_boot_message();
+        hide_boot_progress();
+
+        bullets.string = "";
+        while (n_bullets--) bullets.string += PROMPT.bullet;
+
+        if (!bullets.string) bullets.string = PROMPT.placeholder;
+
+        bullets.image = Image.Text(bullets.string, ACCENT_COLOR.red, ACCENT_COLOR.green, ACCENT_COLOR.blue, 1, SECONDARY_FONT);
+
+        bullets.sprite.SetImage(bullets.image);
+        bullets.sprite.SetX(prompt.center_x - bullets.image.GetWidth()  / 2);
+        bullets.sprite.SetY(prompt.center_y - bullets.image.GetHeight() / 2);
+    }
+
+    Plymouth.SetDisplayPasswordFunction(display_password_callback);
+}
+
+
+#------------------------------ Display Normal --------------------------------
+
+fun display_normal_callback() {
+    global.flow = "run";
+    hide_password_screen();
+    show_animation();
+    show_boot_message();
+    show_boot_progress();
+}
+
+Plymouth.SetDisplayNormalFunction(display_normal_callback);
+
+
+# -------------------------------- Refresh ------------------------------------
+
+fun refresh_callback() {
+    if (global.flow == "run") update_animation();
+}
+
+Plymouth.SetRefreshFunction(refresh_callback);
+
+
+#----------------------------------------- Quit --------------------------------
+
+fun quit_callback() {}
+
+Plymouth.SetQuitFunction(quit_callback);

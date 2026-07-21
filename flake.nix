@@ -30,6 +30,8 @@
       packages.x86_64-linux = rec {
         # recursive so default alias can refer to kartoza-plymouth
         kartoza-plymouth = pkgs.callPackage ./packages/kartoza-plymouth-theme { };
+        # QGIS "Spatial without Compromise" boot splash (theme dir: qgis).
+        qgis-plymouth = pkgs.callPackage ./packages/qgis-plymouth-theme { };
         default = kartoza-plymouth;
       };
 

@@ -1,0 +1,9 @@
+[Plymouth Theme]
+Name=qgis
+Description=QGIS "Spatial without Compromise" Plymouth Theme
+Comment=QGIS-branded boot splash — created by Tim Sutton (@timlinux)
+ModuleName=script
+
+[script]
+ImageDir=/usr/share/plymouth/themes/qgis/images
+ScriptFile=/usr/share/plymouth/themes/qgis/qgis.script
