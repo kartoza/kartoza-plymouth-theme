@@ -100,12 +100,14 @@ magick -background none -fill "$MUTE" -font "$REG" -pointsize 30 \
   "$img/.understrap.png"
 
 # ---- 3. QGIS "Q" globe, sized to match the keynote composition ------
-magick "$src/qgis-q.png" -resize x360 "$img/.q.png"
+# Kept deliberately small and pulled in from the right edge so the whole
+# Q stays on screen even if a framebuffer scales the splash oddly:
+# ~290px tall, centred at 64% width / 50% height on the 1920x1080 canvas
+# leaves ~30% clear margin to the right edge.
+magick "$src/qgis-q.png" -resize x290 "$img/.q.png"
 q_w="$(magick identify -format '%w' "$img/.q.png")"
 q_h="$(magick identify -format '%h' "$img/.q.png")"
-# Centre the Q at 72% width / 50% height (its position on the keynote
-# title slide), converted to a top-left offset for -geometry.
-q_x="$(python3 -c "print(int(0.72*1920 - $q_w/2))")"
+q_x="$(python3 -c "print(int(0.64*1920 - $q_w/2))")"
 q_y="$(python3 -c "print(int(0.50*1080 - $q_h/2))")"
 
 # ---- 4. background.png: map + baked strapline + baked Q -------------
